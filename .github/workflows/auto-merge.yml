@@ -1,0 +1,65 @@
+name: Enforce Folder Permissions and Auto-Merge
+
+on:
+  push:
+    branches:
+      - avishek-branch
+      - moumita-branch
+      - michael-branch
+
+jobs:
+  enforce-and-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify user and folder permissions
+        id: verify
+        run: |
+          USER=${{ github.actor }}
+          BRANCH=${{ github.ref_name }}
+          declare -A USER_BRANCHES
+          USER_BRANCHES["avishek-018"]="avishek-branch"
+          USER_BRANCHES["Moumita-Sen-Sarma"]="moumita-branch"
+          USER_BRANCHES["MikeLilley"]="michael-branch"
+          declare -A USER_FOLDERS
+          USER_FOLDERS["avishek-018"]="avishek"
+          USER_FOLDERS["Moumita-Sen-Sarma"]="moumita"
+          USER_FOLDERS["MikeLilley"]="michael"
+          
+          # Verify user matches branch
+          ALLOWED_BRANCH=${USER_BRANCHES[$USER]}
+          if [ "$BRANCH" != "$ALLOWED_BRANCH" ]; then
+            echo "Error: $USER can only push to $ALLOWED_BRANCH, not $BRANCH"
+            exit 1
+          fi
+          
+          # Verify folder changes
+          ALLOWED_FOLDER=${USER_FOLDERS[$USER]}
+          if [ -z "$ALLOWED_FOLDER" ]; then
+            echo "Error: No folder assigned to user $USER"
+            exit 1
+          fi
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          for FILE in $CHANGED_FILES; do
+            if [[ "$FILE" != "$ALLOWED_FOLDER/"* ]]; then
+              echo "Error: $USER tried to modify $FILE, but is only allowed in $ALLOWED_FOLDER/"
+              exit 1
+            fi
+          done
+          echo "Verification passed for $USER on $BRANCH"
+
+      - name: Auto-merge to main
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH=${{ github.ref_name }}
+          # Ensure main is up to date
+          git fetch origin main
+          git checkout main
+          git merge --no-ff origin/$BRANCH -m "Auto-merge validated changes from $BRANCH"
+          git push origin main

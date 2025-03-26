@@ -23,6 +23,7 @@ jobs:
 
           # Map GitHub usernames to their allowed folders
           declare -A USER_FOLDERS
+          USER_FOLDERS["avishek-018"]="avishek" 
           USER_FOLDERS["MikeLilley"]="michael"  # Replace with Michael's GitHub username
           USER_FOLDERS["moumita-username"]="moumita"  # Replace with Moumita's GitHub username
 

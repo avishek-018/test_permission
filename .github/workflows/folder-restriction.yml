@@ -3,7 +3,9 @@ name: Enforce Folder Permissions and Auto-Merge
 on:
   push:
     branches:
-      - '*-branch' # Matches avishek-branch, moumita-branch, michael-branch
+      - avishek-branch
+      - moumita-branch
+      - michael-branch
 
 jobs:
   enforce-and-merge:

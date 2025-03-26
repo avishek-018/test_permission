@@ -1,46 +1,42 @@
-name: Enforce Folder Permissions
+name: Enforce Folder Permissions and Auto-Merge
 
 on:
   push:
     branches:
       - '*-branch' # Matches avishek-branch, moumita-branch, michael-branch
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  check-folder-permissions:
+  enforce-and-merge:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2 # To compare commits
+          token: ${{ secrets.GITHUB_TOKEN }} # For pushing to main
 
       - name: Check folder changes
         run: |
-          # Get the GitHub username of the pusher/PR creator
           USER=${{ github.actor }}
-
-          # Map GitHub usernames to their allowed folders
           declare -A USER_FOLDERS
           USER_FOLDERS["avishek-018"]="avishek"
           USER_FOLDERS["Moumita-Sen-Sarma"]="moumita"
           USER_FOLDERS["MikeLilley"]="michael"
-
-          # Determine the user's allowed folder
           ALLOWED_FOLDER=${USER_FOLDERS[$USER]}
           if [ -z "$ALLOWED_FOLDER" ]; then
             echo "Error: No folder assigned to user $USER"
             exit 1
           fi
-
-          # Get changed files
           CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
-
-          # Check if any changed file is outside the user's folder
           for FILE in $CHANGED_FILES; do
             if [[ "$FILE" != "$ALLOWED_FOLDER/"* ]]; then
               echo "Error: $USER tried to modify $FILE, but is only allowed in $ALLOWED_FOLDER/"
               exit 1
             fi
           done
+
+      - name: Auto-merge to main
+        run: |
+          git fetch origin main
+          git checkout main
+          git merge --no-ff ${{ github.ref_name }} -m "Auto-merge from ${{ github.ref_name }}"
+          git push origin main

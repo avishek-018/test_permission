@@ -3,7 +3,7 @@ name: Enforce Folder Permissions
 on:
   push:
     branches:
-      - '*-branch' # Matches avishek-branch, moumita-branch
+      - '*-branch' # Matches avishek-branch, moumita-branch, michael-branch
   pull_request:
     branches:
       - main
@@ -23,9 +23,9 @@ jobs:
 
           # Map GitHub usernames to their allowed folders
           declare -A USER_FOLDERS
-          USER_FOLDERS["avishek-018"]="avishek" 
-          USER_FOLDERS["MikeLilley"]="michael"  # Replace with Michael's GitHub username
-          USER_FOLDERS["moumita-username"]="moumita"  # Replace with Moumita's GitHub username
+          USER_FOLDERS["avishek-018"]="avishek"
+          USER_FOLDERS["Moumita-Sen-Sarma"]="moumita"
+          USER_FOLDERS["MikeLilley"]="michael"
 
           # Determine the user's allowed folder
           ALLOWED_FOLDER=${USER_FOLDERS[$USER]}

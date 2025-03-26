@@ -11,8 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # To compare commits
-          token: ${{ secrets.GITHUB_TOKEN }} # For pushing to main
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check folder changes
         run: |
@@ -34,9 +34,10 @@ jobs:
             fi
           done
 
-      - name: Auto-merge to main
+      - name: Create Pull Request and Auto-Merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git fetch origin main
-          git checkout main
-          git merge --no-ff ${{ github.ref_name }} -m "Auto-merge from ${{ github.ref_name }}"
-          git push origin main
+          BRANCH=${{ github.ref_name }}
+          gh pr create --base main --head $BRANCH --title "Auto-merge from $BRANCH" --body "Changes validated and auto-merged" || true
+          gh pr merge --auto --merge $BRANCH

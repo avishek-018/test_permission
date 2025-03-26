@@ -1,0 +1,45 @@
+name: Enforce Folder Permissions
+
+on:
+  push:
+    branches:
+      - '*-branch' # Matches avishek-branch, moumita-branch
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-folder-permissions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # To compare commits
+
+      - name: Check folder changes
+        run: |
+          # Get the GitHub username of the pusher/PR creator
+          USER=${{ github.actor }}
+
+          # Map GitHub usernames to their allowed folders
+          declare -A USER_FOLDERS
+          USER_FOLDERS["avishek-018"]="avishek"  # Replace with Avishek's GitHub username
+          USER_FOLDERS["Moumita-Sen-Sarma"]="moumita"  # Replace with Moumita's GitHub username
+
+          # Determine the user's allowed folder
+          ALLOWED_FOLDER=${USER_FOLDERS[$USER]}
+          if [ -z "$ALLOWED_FOLDER" ]; then
+            echo "Error: No folder assigned to user $USER"
+            exit 1
+          fi
+
+          # Get changed files
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+
+          # Check if any changed file is outside the user's folder
+          for FILE in $CHANGED_FILES; do
+            if [[ "$FILE" != "$ALLOWED_FOLDER/"* ]]; then
+              echo "Error: $USER tried to modify $FILE, but is only allowed in $ALLOWED_FOLDER/"
+              exit 1
+            fi
+          done
